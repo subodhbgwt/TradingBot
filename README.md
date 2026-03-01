@@ -1,4 +1,4 @@
-# FinanceBrah 📈
+# TradingBot 📈
 
 A live algorithmic trading bot for **SPY** that uses a trend-following strategy built on SMA crossovers, ADX filtering, and ATR-based volatility exits. Trades are executed through the [Alpaca](https://alpaca.markets/) paper-trading API.
 
