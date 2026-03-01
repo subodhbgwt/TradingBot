@@ -17,8 +17,8 @@ The bot polls every 60 seconds, checks the latest minute bars, computes signals,
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/<your-username>/financialllm.git
-cd financialllm
+git clone https://github.com/<your-username>/TradingBot.git
+cd TradingBot
 pip install -r requirements.txt
 ```
 
