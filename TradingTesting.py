@@ -1,8 +1,6 @@
 import os
-import yfinance as yf
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import time
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -15,19 +13,15 @@ from alpaca.trading.enums import OrderSide, TimeInForce
 
 load_dotenv()
 
-# ==========================================
-# 1. SETTINGS & CONFIG
-# ==========================================
+# --- settings ---
 TICKER = "SPY"
-QTY = 1               
-LIVE_MODE = True      
+QTY = 1
+LIVE_MODE = True  # not wired up yet, client below is always paper
 ALPACA_KEY = os.environ["ALPACA_KEY"]
 ALPACA_SECRET = os.environ["ALPACA_SECRET"]
 LOG_FILE = "trading_log.txt"
 
-# ==========================================
-# 2. THE STRATEGY ENGINE
-# ==========================================
+# --- signals ---
 def calculate_strategy(df, fast=20, slow=130):
     if len(df) < slow: return df
     df['SMA_F'] = df['Close'].rolling(fast).mean()
@@ -51,13 +45,11 @@ def calculate_strategy(df, fast=20, slow=130):
     df['Final_Pos'] = np.where((df['Vol_Exit'] == 1) | (df['Trend_OK'] == 0), 0, df['Base_Pos'])
     return df
 
-# ==========================================
-# 3. PERFORMANCE & EXECUTION
-# ==========================================
+# --- orders and logging ---
 def get_daily_pnl(trading_client):
-    """Calculates the dollar change in account equity since market open."""
+    """Dollar change in account equity since yesterday's close."""
     account = trading_client.get_account()
-    # last_equity is the equity at the end of the previous trading day
+    # last_equity = equity at the previous close
     daily_pnl = float(account.equity) - float(account.last_equity)
     return daily_pnl
 
@@ -72,7 +64,7 @@ def execute_trade(trading_client, signal, last_row):
         try:
             position = trading_client.get_open_position(TICKER)
             current_qty = float(position.qty)
-        except:
+        except Exception:  # no open position
             current_qty = 0
 
         if signal == 1 and current_qty == 0:
@@ -115,7 +107,7 @@ def run_live():
             if clock.is_open:
                 execute_trade(trading_client, signal, last_row)
             
-            # Diagnostic Pulse
+            # status line
             pnl = get_daily_pnl(trading_client)
             now_str = datetime.now().strftime('%H:%M:%S')
             pnl_str = f"+${pnl:.2f}" if pnl >= 0 else f"-${abs(pnl):.2f}"

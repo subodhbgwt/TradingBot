@@ -1,10 +1,9 @@
 """
 Backtest for the SPY trend-following strategy from TradingTesting.py.
 
-Reuses the exact signal logic (SMA 20/130 + ADX > 25 filter + 2*ATR volatility exit),
-simulates a long/flat strategy on daily SPY bars since 2005, and reports the
-performance metrics you'd want on a CV: Sharpe, max drawdown, CAGR, trade count,
-win rate, and total return vs. buy-and-hold.
+Same signal logic (SMA 20/130, ADX > 25 filter, 2*ATR exit), run long/flat on
+daily SPY bars since 2005. Prints Sharpe, Sortino, max drawdown, CAGR, vol and
+trade stats next to buy-and-hold.
 
 Run:
     pip install yfinance pandas numpy matplotlib

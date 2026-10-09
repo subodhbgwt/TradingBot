@@ -1,75 +1,66 @@
-# TradingBot 📈
+# TradingBot
 
-A live algorithmic trading bot for **SPY** that uses a trend-following strategy built on SMA crossovers, ADX filtering, and ATR-based volatility exits. Trades are executed through the [Alpaca](https://alpaca.markets/) paper-trading API.
+Trend-following bot for SPY. It goes long when the 20-period SMA is above the 130-period SMA, only trades when ADX is above 25, and gets out early if price drops more than 2x ATR in one bar. Orders go through Alpaca's paper-trading API.
 
 ## Strategy
 
-| Indicator | Role |
+| Indicator | What it does |
 |---|---|
-| **SMA 20 / 130** | Trend direction (fast crosses above slow → long) |
-| **ADX > 25** | Only trade when there's a real trend |
-| **ATR × 2** | Emergency exit on large adverse moves |
+| SMA 20 / 130 | Long when the fast average is above the slow one |
+| ADX > 25 | Only trade when there's a clear trend |
+| 2 x ATR | Exit on a large down move |
 
-The bot polls every 60 seconds, checks the latest minute bars, computes signals, and executes market orders when the conditions line up.
+The live bot (`TradingTesting.py`) pulls the latest minute bars every 60 seconds and places a market order when the signal changes. It's long or flat, never short.
 
-## Quick Start
+## Backtest
 
-### 1. Clone & install
+`backtest.py` runs the same signal logic on daily SPY bars from 2005. Positions are taken on the bar after the signal, so there's no look-ahead.
+
+The committed `trades.csv` and `equity_curve.png` are from a run on data up to April 2026:
+
+| | Strategy | Buy and hold |
+|---|---|---|
+| Annualised volatility | 9.5% | 19.2% |
+| Max drawdown | -27% | -55% |
+| Sharpe (rf 2%) | 0.43 | |
+| Trades | 138 | |
+
+It roughly halves volatility and drawdown compared with holding SPY, but the total return is lower. Re-running it gives slightly different numbers as new data comes in.
+
+## Running it
 
 ```bash
-git clone https://github.com/<your-username>/TradingBot.git
-cd TradingBot
 pip install -r requirements.txt
+cp .env.example .env       # add your Alpaca paper-trading keys
+python backtest.py         # writes trades.csv and equity_curve.png
+python TradingTesting.py   # live paper trading
 ```
 
-### 2. Add your Alpaca keys
+Paper-trading keys are free: https://app.alpaca.markets/signup
 
-Copy the example env file and fill in your credentials:
-
-```bash
-cp .env.example .env
-```
-
-Then edit `.env`:
+While running, the bot prints a status line every minute:
 
 ```
-ALPACA_KEY=your_alpaca_api_key_here
-ALPACA_SECRET=your_alpaca_secret_key_here
-```
-
-> You can get free paper-trading keys at [https://app.alpaca.markets/signup](https://app.alpaca.markets/signup).
-
-### 3. Run
-
-```bash
-python financebrah.py
-```
-
-The bot will start polling and print a diagnostic pulse every minute:
-
-```
---- BOT ACTIVE: Monitoring SPY with Daily PnL ---
 [14:32:10] Price: $527.43 | ADX: 31.2
 Daily PnL: +$12.50 | Market: OPEN
 ```
 
-## Configuration
+## Settings
 
-Edit the constants at the top of `financebrah.py`:
+At the top of `TradingTesting.py`:
 
-| Variable | Default | Description |
+| Variable | Default | Meaning |
 |---|---|---|
 | `TICKER` | `"SPY"` | Symbol to trade |
-| `QTY` | `1` | Number of shares per trade |
-| `LIVE_MODE` | `False` | Currently unused — Alpaca `paper=True` is hardcoded |
+| `QTY` | `1` | Shares per trade |
+| `LIVE_MODE` | `True` | Not used yet, the client is hardcoded to `paper=True` |
 
-## Project Structure
+## Files
 
 ```
-financialllm/
-├── financebrah.py      # Main bot: strategy + execution loop
-├── requirements.txt    # Python dependencies
-├── .env                # Your API keys (git-ignored)
-├── .env.example        # Template for .env
-└── .gitignore
+TradingTesting.py   live bot: signals and order execution
+backtest.py         backtest with metrics and a trade log
+trades.csv          trades from the last backtest run
+equity_curve.png    strategy vs. buy and hold
+.env.example        template for the API keys
 ```
